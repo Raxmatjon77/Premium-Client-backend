@@ -1,77 +1,77 @@
 
-let db = require("../db/db");
+let db = require("../config/db");
 const jwt=require("../utils/jwt")
 
 class Users {
     async login(req,res,next){
-        const phoneNumber= req.body.phoneNumber
-        let existUser;
-        try {
-         
-                 existUser = await new Promise(function (resolve, reject) {
-                   db.query(
-                     `SELECT * FROM Client WHERE phoneNumber=${phoneNumber};`,
-                     function (err, results, fields) {
-                       console.log(err);
-                       if (err) {
-                         resolve(null);
-                         return null;
-                       }
-                       return resolve(results[0]);
-                     }
-                   );
-                 });
-        } catch (error) {
-            console.log('error:',error);
-        }
-        if(existUser){
-            try {
-            //  console.log(existUser);
-                let otpCode = generateOTP();
-                  db.query(
-                    `insert into Otp (otp,client_id)   values ('${otpCode}',${existUser.id});`
-                  );
-                return res.status(200).json({
-                    "id":existUser.id,
-                    'otpCode': otpCode
-                })
-            } catch (error) {
-                
-            }
-            
-        }
-        else{
-          
-            try {
-              db.query(
-                `insert into Client (phoneNumber)   values ('${phoneNumber}');`
-              );
-           const    user = await new Promise(function (resolve, reject) {
-                 db.query(
-                   `SELECT * FROM Client WHERE phoneNumber='${phoneNumber}';`,
-                   function (err, results, fields) {
-                     console.log('err',err);
-                     if (err) {
-                       resolve(null);
-                       return null;
-                     }
-                     return resolve(results[0]);
+       const {phoneNumber}= req.body
+       if (phoneNumber) {
+         let existUser;
+         try {
+           existUser = await new Promise(function (resolve, reject) {
+             db.query(
+               `SELECT * FROM Client WHERE phoneNumber=${phoneNumber};`,
+               function (err, results, fields) {
+                 //  console.log(err);
+                 if (err) {
+                   resolve(null);
+                   return null;
+                 }
+                 return resolve(results[0]);
+               }
+             );
+           });
+         } catch (error) {
+           console.log("error:", error);
+         }
+         if (existUser) {
+           try {
+             //  console.log(existUser);
+             let otpCode = generateOTP();
+             db.query(
+               `insert into Otp (otp,client_id)   values ('${otpCode}',${existUser.id});`
+             );
+             return res.status(200).json({
+               id: existUser.id,
+               otpCode: otpCode,
+             });
+           } catch (error) {}
+         } else {
+           try {
+             db.query(
+               `insert into Client (phoneNumber)   values ('${phoneNumber}');`
+             );
+             const user = await new Promise(function (resolve, reject) {
+               db.query(
+                 `SELECT * FROM Client WHERE phoneNumber='${phoneNumber}';`,
+                 function (err, results, fields) {
+                   console.log("err", err);
+                   if (err) {
+                     resolve(null);
+                     return null;
                    }
-                 );
-               });
+                   return resolve(results[0]);
+                 }
+               );
+             });
 
-              let otpCode = generateOTP();
-              db.query(
-                `insert into Otp (otp,client_id)   values ('${otpCode}',${user.id})  ;`
-              );
-              
-              return res.status(200).json({
-                id: user.id,
-                otpCode: otpCode,
-              });
-            } catch (error) {}
-        }
-       
+             let otpCode = generateOTP();
+             db.query(
+               `insert into Otp (otp,client_id)   values ('${otpCode}',${user.id})  ;`
+             );
+
+             return res.status(200).json({
+               id: user.id,
+               otpCode: otpCode,
+             });
+           } catch (error) {}
+         }
+       }
+       else{
+        res.status(404).json({
+          message:"you mast enter phone number !"
+        })
+       }
     }
 
     async verify(req,res,next){
@@ -93,6 +93,9 @@ class Users {
          });
        } catch (error) {
          console.log("error:", error);
+       }
+       if (!userVerify) {
+        return res.status(400).json({message:"no user found !"})
        }
 
   
