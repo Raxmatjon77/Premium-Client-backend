@@ -24,13 +24,13 @@ module.exports = async (req, res, next) => {
       return next(new AuthorizationError(401, "No token provided"));
     }
 
-    let { userId, agent, role, orderId } = jwt.verify(token);
+    let { id, phoneNumber} = jwt.verify(token);
     // console.log(" token data :"+JSON.stringify(jwt.verify(token)));
-    req.orderId = orderId;
+    
 
     let user = await new Promise(function (resolve, reject) {
       db.query(
-        `SELECT * from ${role} WHERE id='${userId}'`,
+        `SELECT * from Client WHERE id='${id}' and phoneNumber='${phoneNumber}'`,
         function (err, results, fields) {
           if (err) {
             resolve(null);
@@ -59,7 +59,7 @@ module.exports = async (req, res, next) => {
     if (user) {
       req.user = {
         id: user["id"],
-        role: user["role"],
+        phoneNumber: user["phoneNumber"],
       };
     }
 
