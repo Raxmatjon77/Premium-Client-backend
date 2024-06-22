@@ -155,6 +155,7 @@ class CardController {
             card: cardNumber,
           },
           {
+            
             headers: {
               Authorization: "Bearer " + response1.data["token"],
               "Content-Type": "application/json",

@@ -1,6 +1,5 @@
 const jwt = require("../utils/jwt.js");
 
-
 const {
   AuthorizationError,
   ForbiddenError,
@@ -24,42 +23,53 @@ module.exports = async (req, res, next) => {
       return next(new AuthorizationError(401, "No token provided"));
     }
 
-    let { id, phoneNumber} = jwt.verify(token);
-    // console.log(" token data :"+JSON.stringify(jwt.verify(token)));
+    let { id, phoneNumber,role} = jwt.verify(token);
+ 
     
 
-    let user = await new Promise(function (resolve, reject) {
-      db.query(
-        `SELECT * from Client WHERE id='${id}' and phoneNumber='${phoneNumber}'`,
-        function (err, results, fields) {
-          if (err) {
-            resolve(null);
-            return null;
-          }
-          if (results.length != 0) {
-            resolve(results[0]);
-          } else {
-            resolve(null);
-          }
-        }
-      );
-    });
-
-    // if (!user) {
-    //   return next(new AuthorizationError(401, "Invalid token"));
-    // }
-
-    // const reqAgent = req.headers["user-agent"];
-    // if (agent !== reqAgent) {
-    //     return next(
-    //         new ForbiddenError(403, "You can't log in different devices")
-    //     );
-    // }
+    let user;
+    if(role === "client") {
+         user = await new Promise(function (resolve, reject) {
+           db.query(
+             `SELECT * from Client WHERE id='${id}' and phoneNumber='${phoneNumber}'`,
+             function (err, results, fields) {
+               if (err) {
+                 resolve(null);
+                 return null;
+               }
+               if (results.length != 0) {
+                 resolve(results[0]);
+               } else {
+                 resolve(null);
+               }
+             }
+           );
+         });
+    }
+    else if (role == "SuperAdmin") {
+         user = await new Promise(function (resolve, reject) {
+           db.query(
+             `SELECT * from clientadmin WHERE id='${id}'`,
+             function (err, results, fields) {
+               if (err) {
+                 resolve(null);
+                 return null;
+               }
+               if (results.length != 0) {
+                 resolve(results[0]);
+               } else {
+                 resolve(null);
+               }
+             }
+           );
+         });
+    }
 
     if (user) {
       req.user = {
         id: user["id"],
         phoneNumber: user["phoneNumber"],
+        role: user["role"],
       };
     }
 

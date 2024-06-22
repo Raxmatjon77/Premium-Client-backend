@@ -25,7 +25,7 @@ module.exports = {
       const decodedToken = JWT.verify(token, process.env.JWT_SECRET);
 
       console.log(decodedToken);
-      console.log(token);
+    
       return decodedToken;
     } catch (error) {
       throw error;
