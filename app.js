@@ -3,7 +3,7 @@ var express = require("express");
 const morgan = require("morgan");
 require('dotenv').config()
 const cors = require("cors");
-
+const logger=require('./src/middlewares/logger')
 const helmet = require("helmet");
 const path = require("path");
 
@@ -18,7 +18,7 @@ const errorHandler = require("./src/middlewares/error-handler.js");
 
 const app = express();
 
-const PORT = process.env.PORT || 3030;
+const PORT = process.env.CLIENT_PORT || 7777;
 
 
 
@@ -36,9 +36,10 @@ app.use("/api/v1/user/",userRouter);
 app.use("/api/v1/zayavka/", appRouter);
 app.use("/api/v1/card/", cardRouter);
 
-app.use(errorHandler)
-
 app.use(helmet());
+app.use(errorHandler)
+app.use(logger);
+
 
 
 

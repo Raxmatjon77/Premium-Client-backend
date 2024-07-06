@@ -21,14 +21,41 @@ class App {
   async getAll(req, res, next) {
     console.log("req.user", req.user);
 
-    if (req.user.role != "SuperAdmin") {
-      return next(new ForbiddenError(403,"You do not have permission to this page."));
+    if (req.user.role === "SuperAdmin") {
+       let zayavkalar;
+       try {
+         zayavkalar = await new Promise(function (resolve, reject) {
+           db.query(
+             `SELECT * FROM ClientZayavka`,
+             function (err, results, fields) {
+               if (err) {
+                 resolve(null);
+                 return null;
+               }
+               resolve(results);
+             }
+           );
+         });
+
+         if (!zayavkalar) {
+           return next(new NotFoundError(400));
+         }
+         console.log("🚀 ~ App ~ getAll ~    all zayavkalar :");
+         return res.status(200).json({
+           success: true,
+           allZayavkalar: zayavkalar,
+         });
+       } catch (error) {
+         console.log(error);
+       }
+     
     }
-    let zayavkalar;
+    else if(req.user.role == "client"){
+       let zayavkalar;
     try {
       zayavkalar = await new Promise(function (resolve, reject) {
         db.query(
-          `SELECT * FROM ClientZayavka`,
+          `SELECT * FROM ClientZayavka where client_id=${req.user.userId}`,
           function (err, results, fields) {
             if (err) {
               resolve(null);
@@ -40,15 +67,16 @@ class App {
       });
 
       if (!zayavkalar) {
-        return next(new NotFoundError(400));
+        return next(new NotFoundError(400,"No zayavka found !"));
       }
-      console.log("🚀 ~ App ~ getAll ~    all zayavkalar :");
-      return res.status(200).json({
-        success: true,
-        allZayavkalar: zayavkalar,
-      });
-    } catch (error) {}
-  }
+        return res.status(200).json({
+          success: true,
+          allZayavkalar: zayavkalar,
+        });
+    } catch (error) {
+      console.log(error);
+    }}
+    }
 
   async  clientGetAll(req, res, next) {
  

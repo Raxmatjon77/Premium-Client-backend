@@ -5,6 +5,7 @@ const {
   ForbiddenError,
   InternalServerError,
   InvalidTokenError,
+  NotFoundError,
 } = require("../utils/errors.js");
 const { TokenExpiredError, JsonWebTokenError } = require("jsonwebtoken");
 
@@ -23,15 +24,15 @@ module.exports = async (req, res, next) => {
       return next(new AuthorizationError(401, "No token provided"));
     }
 
-    let { id, phoneNumber,role} = jwt.verify(token);
+    let { userId, phoneNumber,role} = jwt.verify(token);
  
-    
+    console.log("role", role);
 
     let user;
     if(role === "client") {
          user = await new Promise(function (resolve, reject) {
            db.query(
-             `SELECT * from Client WHERE id='${id}' and phoneNumber='${phoneNumber}'`,
+             `SELECT * from Client WHERE id='${userId}' and phoneNumber='${phoneNumber}'`,
              function (err, results, fields) {
                if (err) {
                  resolve(null);
@@ -49,7 +50,7 @@ module.exports = async (req, res, next) => {
     else if (role == "SuperAdmin") {
          user = await new Promise(function (resolve, reject) {
            db.query(
-             `SELECT * from clientadmin WHERE id='${id}'`,
+             `SELECT * from SuperAdmin WHERE id='${userId}'`,
              function (err, results, fields) {
                if (err) {
                  resolve(null);
@@ -64,16 +65,17 @@ module.exports = async (req, res, next) => {
            );
          });
     }
-
+    console.log("user:",user);
     if (user) {
       req.user = {
-        id: user["id"],
+        userId: user["id"],
         phoneNumber: user["phoneNumber"],
         role: user["role"],
       };
+        return next();
     }
-
-    return next();
+    return next(new NotFoundError(400,"User not found !"))
+  
   } catch (error) {
     console.log("check token >>");
     console.log(error);

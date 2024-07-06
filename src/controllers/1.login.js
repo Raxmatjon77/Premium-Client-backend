@@ -125,7 +125,11 @@ class Users {
           }
         );
       });
-      const token = jwt.sign({ id: user.id, phoneNumber: user.phoneNumber, role: user.role});
+      const token = jwt.sign({
+        userId: user.id,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+      });
       return res.status(200).json({
         message: "ok",
         data: {
